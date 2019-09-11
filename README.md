@@ -6,10 +6,21 @@ A C++ implementation of the popular LeNet convolutional neural network architect
 
 You'll probably need
 - g++ >= 5.0.0
+sudo apt-get install gcc
+
 - CMake >= 3.0.0
+sudo apt-get install cmake
+
 - make >= 4.0
+sudo apt-get install make
+
 - Armadillo >= 8.300.4
+sudo apt-get install libarmadillo-dev
+
 - Boost unit test framework (Boost version >= 1.58)
+sudo apt-get install liblapack-dev
+sudo apt-get install libblas-dev
+sudo apt-get install libboost-dev
 
 to run everything in this repo. I've only tried to run this on a Linux system (VM, Ubuntu 18.04, RAM: 4G) -- but I dont see any obvious reason why it shouldn't work on other platforms as long as you have the dependencies installed.
 
