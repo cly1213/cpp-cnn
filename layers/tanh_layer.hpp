@@ -1,13 +1,13 @@
-#ifndef RELU_LAYER_HPP
-#define RELU_LAYER_HPP
+#ifndef TANH_LAYER_HPP
+#define TANH_LAYER_HPP
 
 #include <iostream>
 #include <armadillo>
 
-class ReLULayer
+class TanhLayer
 {
  public:
-  ReLULayer(size_t inputHeight,
+  TanhLayer(size_t inputHeight,
        size_t inputWidth,
        size_t inputDepth) :
       inputHeight(inputHeight),
@@ -19,17 +19,10 @@ class ReLULayer
 
   void Forward(arma::cube& input, arma::cube& output)
   {
-    //ReLU	  
-    output = arma::zeros(arma::size(input));
-    output = arma::max(input, output);
-    
-    //LeakyReLU
-    //output = arma::max(input * 0.01, input);
     
     //tanh
-    //output = arma::tanh(input);
-    
-	  
+    output = arma::tanh(input);
+    	  
     this->input = input;
     this->output = output;
   }
@@ -37,10 +30,10 @@ class ReLULayer
   void Backward(arma::cube upstreamGradient)
   {
     gradientWrtInput = input;
-    gradientWrtInput.transform( [](double val) { return val > 0? 1 : 0; } );
-    //gradientWrtInput.transform( [](double val) { return val > 0? 1 : 0.01; } );
-    //gradientWrtInput.transform( [](double val) { return ( std::pow(std::cosh(val), -2)); });
+
+    gradientWrtInput.transform( [](double val) { return ( std::pow(std::cosh(val), -2)); });
     gradientWrtInput = gradientWrtInput % upstreamGradient;
+
   }
 
   arma::cube getGradientWrtInput() { return gradientWrtInput; }

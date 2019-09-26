@@ -1,6 +1,9 @@
 #include "layers/convolution_layer.hpp"
 #include "layers/max_pooling_layer.hpp"
 #include "layers/relu_layer.hpp"
+#include "layers/tanh_layer.hpp"
+#include "layers/fully_connected_layer.hpp"
+
 #include "layers/dense_layer.hpp"
 #include "layers/softmax_layer.hpp"
 #include "layers/cross_entropy_loss_layer.hpp"
@@ -47,7 +50,7 @@ int main(int argc, char ** argv)
   const size_t TEST_DATA_SIZE = testData.size();
   const double LEARNING_RATE = 0.05;
   const size_t EPOCHS = 10;
-  const size_t BATCH_SIZE = 10;
+  const size_t BATCH_SIZE = 100;
   const size_t NUM_BATCHES = TRAIN_DATA_SIZE / BATCH_SIZE;
 
   // Define the network layers
@@ -62,11 +65,20 @@ int main(int argc, char ** argv)
       6);
   // Output is 24 x 24 x 6
 
+  /*
+  ReLULayer change ro TanhLayer
+  TanhLayer r1(
+      24,
+      24,
+      6);
+  // Output is 24 x 24 x 6 
+  */
+
   ReLULayer r1(
       24,
       24,
       6);
-  // Output is 24 x 24 x 6
+ // Output is 24 x 24 x 6
 
   MaxPoolingLayer mp1(
       24,
@@ -89,12 +101,21 @@ int main(int argc, char ** argv)
       16);
   // Output is 8 x 8 x 16
 
+  /*
+  //ReLULayer change to TanhLayer
+  TanhLayer r2(
+      8,
+      8,
+      16);
+  // Output is 8 x 8 x 16
+  */
+
   ReLULayer r2(
       8,
       8,
       16);
   // Output is 8 x 8 x 16
-
+  
   MaxPoolingLayer mp2(
       8,
       8,
@@ -110,7 +131,14 @@ int main(int argc, char ** argv)
       4,
       16,
       10);
-  // Output is a vector of size 10
+  // Output is a vector of size 10 to 128
+  
+   
+  FullyConnectedLayer fc(
+      10,
+      10);
+  //Input and Output are both vector of size 10
+  
 
   SoftmaxLayer s(10);
   // Output is a vector of size 10
@@ -126,6 +154,9 @@ int main(int argc, char ** argv)
   arma::cube r2Out = arma::zeros(8, 8, 16);
   arma::cube mp2Out = arma::zeros(4, 4, 16);
   arma::vec dOut = arma::zeros(10);
+  //add fully connected layer
+  arma::vec fcOut = arma::zeros(10);
+
   arma::vec sOut = arma::zeros(10);
 
   // Initialize loss and cumulative loss. Cumulative loss totals loss over all
@@ -157,7 +188,11 @@ int main(int argc, char ** argv)
         mp2.Forward(r2Out, mp2Out);
         d.Forward(mp2Out, dOut);
         dOut /= 100;
-        s.Forward(dOut, sOut);
+	
+	//add
+	fc.Forward(dOut, fcOut);
+        s.Forward(fcOut, sOut);
+        //s.Forward(dOut, sOut);
 
         // Compute the loss
         loss = l.Forward(sOut, trainLabels[batch[i]]);
@@ -169,8 +204,15 @@ int main(int argc, char ** argv)
             l.getGradientWrtPredictedDistribution();
         s.Backward(gradWrtPredictedDistribution);
         arma::vec gradWrtSIn = s.getGradientWrtInput();
-        d.Backward(gradWrtSIn);
+        
+	//add
+	fc.Backward(gradWrtSIn);
+        arma::vec gradWrtFCIn = fc.getGradientWrtInput();
+        d.Backward(gradWrtFCIn);
+	
+	//d.Backward(gradWrtSIn);
         arma::cube gradWrtDIn = d.getGradientWrtInput();
+
         mp2.Backward(gradWrtDIn);
         arma::cube gradWrtMP2In = mp2.getGradientWrtInput();
         r2.Backward(gradWrtMP2In);
@@ -187,6 +229,9 @@ int main(int argc, char ** argv)
 
       // Update params
       d.UpdateWeightsAndBiases(BATCH_SIZE, LEARNING_RATE);
+      //add
+      fc.UpdateWeightsAndBiases(BATCH_SIZE, LEARNING_RATE);
+
       c1.UpdateFilterWeights(BATCH_SIZE, LEARNING_RATE);
       c2.UpdateFilterWeights(BATCH_SIZE, LEARNING_RATE);
     }
@@ -211,7 +256,10 @@ int main(int argc, char ** argv)
       mp2.Forward(r2Out, mp2Out);
       d.Forward(mp2Out, dOut);
       dOut /= 100;
-      s.Forward(dOut, sOut);
+      //add
+      fc.Forward(dOut, fcOut);
+      s.Forward(fcOut, sOut);
+      //s.Forward(dOut, sOut);
 
       if (trainLabels[i].index_max() == sOut.index_max())
         correct += 1.0;
@@ -237,7 +285,10 @@ int main(int argc, char ** argv)
       mp2.Forward(r2Out, mp2Out);
       d.Forward(mp2Out, dOut);
       dOut /= 100;
-      s.Forward(dOut, sOut);
+      //add
+      fc.Forward(dOut, fcOut);
+      s.Forward(fcOut, sOut);
+      //s.Forward(dOut, sOut);
 
       cumLoss += l.Forward(sOut, validationLabels[i]);
 
@@ -276,7 +327,10 @@ int main(int argc, char ** argv)
       mp2.Forward(r2Out, mp2Out);
       d.Forward(mp2Out, dOut);
       dOut /= 100;
-      s.Forward(dOut, sOut);
+      //add
+      fc.Forward(dOut, fcOut);
+      s.Forward(fcOut, sOut);
+      //s.Forward(dOut, sOut);
 
       fout << std::to_string(i+1) << ","
           << std::to_string(sOut.index_max()) << std::endl;
